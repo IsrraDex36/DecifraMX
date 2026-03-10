@@ -4,18 +4,18 @@ export async function GET() {
   const openApiDocs = {
     openapi: "3.0.0",
     info: {
-      title: "AhíTaClave API",
-      description: "API REST pública para validar y decodificar CURP y RFC mexicanos localmente.",
+      title: "DescífraMX API",
+      description: "API REST pública para validar y decodificar CURP y RFC mexicanos. Procesamiento en servidor; no se consultan bases oficiales (RENAPO/SAT).",
       version: "1.0.0"
     },
     servers: [
       {
-        url: "https://desciframx.com",
-        description: "Servidor de Producción"
+        url: "https://deciframx.vercel.app",
+        description: "Producción (Vercel)"
       },
       {
         url: "http://localhost:3000",
-        description: "Servidor de Desarrollo Local"
+        description: "Desarrollo local"
       }
     ],
     paths: {
@@ -32,7 +32,7 @@ export async function GET() {
                   properties: {
                     curp: {
                       type: "string",
-                      example: "HEGJ850101HMNRLN09"
+                      example: "HEGJ850101HDFRLN08"
                     }
                   },
                   required: ["curp"]
@@ -64,7 +64,7 @@ export async function GET() {
               required: true,
               schema: {
                 type: "string",
-                example: "HEGJ850101HMNRLN09"
+                example: "HEGJ850101HDFRLN08"
               }
             }
           ],

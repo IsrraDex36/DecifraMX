@@ -58,12 +58,15 @@ Para correr este proyecto en tu entorno local, sigue estos pasos:
 
 La aplicación expone una API pública para validar y decodificar CURP y RFC por HTTP. El procesamiento se hace en el servidor; no se consultan bases oficiales (RENAPO/SAT).
 
+- **App en producción:** [https://deciframx.vercel.app](https://deciframx.vercel.app)
+- **Especificación OpenAPI (JSON):** [https://deciframx.vercel.app/api/docs](https://deciframx.vercel.app/api/docs)
+
 ### Base URL
 
 | Entorno | URL |
 |--------|-----|
 | Local | `http://localhost:3000` |
-| Producción | `https://desciframx.com` |
+| Producción | `https://deciframx.vercel.app` |
 
 ### Límite de uso (Rate Limit)
 
@@ -189,11 +192,13 @@ Las respuestas de error tienen `valid: false` y un array `errors` con objetos `{
 
 ### Probar la API (Postman / cURL)
 
-- **CURP (POST):** Body raw JSON `{"curp": "HEGJ850101HDFRLN08"}`, header `Content-Type: application/json`.
-- **CURP (GET):** `GET /api/validate/curp/HEGJ850101HDFRLN08`.
-- **RFC (POST):** Body raw JSON `{"rfc": "HEGJ850101ABC"}`, header `Content-Type: application/json`.
-- **Estados:** `GET /api/states`.
-- **OpenAPI:** `GET /api/docs`.
+**Producción (Vercel):** base URL `https://deciframx.vercel.app`
+
+- **CURP (POST):** `POST https://deciframx.vercel.app/api/validate/curp` — Body raw JSON `{"curp": "HEGJ850101HDFRLN08"}`, header `Content-Type: application/json`.
+- **CURP (GET):** `GET https://deciframx.vercel.app/api/validate/curp/HEGJ850101HDFRLN08`.
+- **RFC (POST):** `POST https://deciframx.vercel.app/api/validate/rfc` — Body raw JSON `{"rfc": "HEGJ850101ABC"}`, header `Content-Type: application/json`.
+- **Estados:** `GET https://deciframx.vercel.app/api/states`.
+- **OpenAPI (especificación):** `GET https://deciframx.vercel.app/api/docs`.
 
 ## 🔒 Privacidad y Seguridad
 
