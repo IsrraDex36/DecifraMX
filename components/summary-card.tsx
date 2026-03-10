@@ -91,14 +91,14 @@ export function SummaryCard({ decoded, type, value }: SummaryCardProps) {
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ type: "spring", stiffness: 400, damping: 30, delay: 0.3 }}
         className={cn(
-          "rounded-lg p-6 transition-colors duration-300 border bg-card shadow-sm",
+          "rounded-lg p-4 sm:p-6 transition-colors duration-300 border bg-card shadow-sm overflow-hidden",
           decoded.isValid
             ? "border-foreground"
             : "border-muted-foreground"
         )}
       >
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex items-center gap-3 sm:gap-4 min-w-0">
             {decoded.isValid ? (
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-sm border border-primary bg-primary text-primary-foreground">
                 <Check className="h-5 w-5" />
@@ -108,31 +108,31 @@ export function SummaryCard({ decoded, type, value }: SummaryCardProps) {
                 <AlertTriangle className="h-5 w-5" />
               </div>
             )}
-            <div>
-              <h3 className="text-lg font-bold text-foreground">
+            <div className="min-w-0">
+              <h3 className="text-base sm:text-lg font-bold text-foreground">
                 {decoded.isValid ? (
-                  <span className="flex items-center gap-2">
+                  <span className="inline-flex items-center gap-2 flex-wrap">
                     {type === "curp" ? "¡CURP válido!" : "¡RFC válido!"}
-                    <Sparkles className="h-5 w-5 text-icon-active" />
+                    <Sparkles className="h-5 w-5 text-icon-active shrink-0" />
                   </span>
                 ) : (
                   `${type === "curp" ? "CURP" : "RFC"} incompleto o con errores`
                 )}
               </h3>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
                 {decoded.isValid
                   ? `Según tu ${type.toUpperCase()}, esto es lo que sabemos:`
                   : "Revisa los siguientes detalles:"}
               </p>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 shrink-0 sm:flex-nowrap flex-wrap">
             <Button
               variant="outline"
               size="sm"
               onClick={handleDownload}
               disabled={isDownloading}
-              className="shrink-0 transition-all hover:bg-secondary focus-visible:ring-2 focus-visible:ring-primary"
+              className="transition-all hover:bg-secondary focus-visible:ring-2 focus-visible:ring-primary"
             >
               {isDownloading ? (
                 <>
@@ -150,7 +150,7 @@ export function SummaryCard({ decoded, type, value }: SummaryCardProps) {
               variant="outline"
               size="sm"
               onClick={handleCopy}
-              className="shrink-0 transition-all hover:bg-secondary focus-visible:ring-2 focus-visible:ring-primary"
+              className="transition-all hover:bg-secondary focus-visible:ring-2 focus-visible:ring-primary"
             >
               {copied ? (
                 <>
@@ -167,51 +167,51 @@ export function SummaryCard({ decoded, type, value }: SummaryCardProps) {
           </div>
         </div>
 
-        <div className="mt-8 grid gap-4 sm:grid-cols-2">
-          <div className="rounded-md bg-muted/30 p-4 border border-border">
+        <div className="mt-6 sm:mt-8 grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
+          <div className="rounded-md bg-muted/30 p-3 sm:p-4 border border-border min-w-0">
             <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
               Identificación
             </p>
-            <p className="text-base sm:text-lg font-medium text-foreground">
+            <p className="text-sm sm:text-base font-medium text-foreground wrap-break-word">
               {summary.nombreDeducido}
             </p>
           </div>
 
-          <div className="rounded-md bg-muted/30 p-4 border border-border">
+          <div className="rounded-md bg-muted/30 p-3 sm:p-4 border border-border min-w-0">
             <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
               {isCURP ? "Fecha de nacimiento" : "Fecha"}
             </p>
-            <p className="text-base sm:text-lg font-medium text-foreground">
+            <p className="text-sm sm:text-base font-medium text-foreground">
               {summary.fechaNacimiento}
             </p>
           </div>
 
           {isCURP ? (
             <>
-              <div className="rounded-md bg-muted/30 p-4 border border-border">
+              <div className="rounded-md bg-muted/30 p-3 sm:p-4 border border-border min-w-0">
                 <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
                   Sexo
                 </p>
-                <p className="text-base sm:text-lg font-medium text-foreground">
+                <p className="text-sm sm:text-base font-medium text-foreground">
                   {(decoded.summary as DecodedCURP["summary"])?.sexo}
                 </p>
               </div>
 
-              <div className="rounded-md bg-muted/30 p-4 border border-border">
+              <div className="rounded-md bg-muted/30 p-3 sm:p-4 border border-border min-w-0">
                 <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
                   Entidad de nacimiento
                 </p>
-                <p className="text-base sm:text-lg font-medium text-foreground">
+                <p className="text-sm sm:text-base font-medium text-foreground wrap-break-word">
                   {(decoded.summary as DecodedCURP["summary"])?.estadoNacimiento}
                 </p>
               </div>
             </>
           ) : (
-            <div className="rounded-md bg-muted/30 p-4 border border-border">
+            <div className="rounded-md bg-muted/30 p-3 sm:p-4 border border-border min-w-0">
               <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
                 Tipo de contribuyente
               </p>
-              <p className="text-base sm:text-lg font-medium text-foreground capitalize">
+              <p className="text-sm sm:text-base font-medium text-foreground capitalize">
                 {(decoded.summary as DecodedRFC["summary"])?.tipo}
               </p>
             </div>
@@ -219,11 +219,11 @@ export function SummaryCard({ decoded, type, value }: SummaryCardProps) {
         </div>
 
         {decoded.errors.length > 0 ? (
-          <div className="mt-6 rounded-md bg-muted/50 border border-muted p-4">
+          <div className="mt-4 sm:mt-6 rounded-md bg-muted/50 border border-muted p-3 sm:p-4 min-w-0">
             <p className="text-sm font-medium text-foreground flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4" /> Advertencias:
+              <AlertTriangle className="h-4 w-4 shrink-0" /> Advertencias:
             </p>
-            <ul className="mt-2 list-inside list-disc text-sm text-muted-foreground space-y-1">
+            <ul className="mt-2 list-inside list-disc text-xs sm:text-sm text-muted-foreground space-y-1 wrap-break-word">
               {decoded.errors.map((error, i) => (
                 <li key={i}>{error}</li>
               ))}
@@ -232,10 +232,10 @@ export function SummaryCard({ decoded, type, value }: SummaryCardProps) {
         ) : null}
 
         {/* Validation Disclaimer */}
-        <div className="mt-6 pt-4 border-t border-border">
+        <div className="mt-4 sm:mt-6 pt-4 border-t border-border">
           <p className="text-xs text-muted-foreground/80 flex items-start gap-1.5 leading-relaxed">
             <Info className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-            <span>Validamos la estructura de tu documento mediante algoritmos. No consultamos bases de datos externas del SAT ni RENAPO, garantizando tu completa privacidad.</span>
+            <span className="min-w-0">Validamos la estructura de tu documento mediante algoritmos. No consultamos bases de datos externas del SAT ni RENAPO, garantizando tu completa privacidad.</span>
           </p>
         </div>
       </motion.div>
