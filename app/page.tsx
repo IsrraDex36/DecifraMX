@@ -76,7 +76,16 @@ export default function Home() {
                 DescífraMX no está afiliado al SAT, RENAPO ni ninguna entidad gubernamental mexicana. Es una herramienta 100% educativa y sin telemetría.
               </p>
             </div>
-            <div className="flex gap-4">
+            <div className="flex flex-wrap gap-4 items-center">
+              <a
+                href="/documentacion-api"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-foreground transition-colors underline underline-offset-4"
+                title="La API procesa solicitudes en servidor (sin almacenamiento persistente)."
+              >
+                API
+              </a>
               <PrivacyModal />
             </div>
           </div>

@@ -8,6 +8,7 @@ import { toPng } from "html-to-image"
 import { cn } from "@/lib/utils"
 import type { DecodedCURP, DecodedRFC } from "@/lib/curp-rfc-decoder"
 import { Confetti } from "@/components/confetti"
+import { toast } from "sonner"
 
 interface SummaryCardProps {
   decoded: DecodedCURP | DecodedRFC
@@ -29,6 +30,7 @@ export function SummaryCard({ decoded, type, value }: SummaryCardProps) {
   const handleCopy = useCallback(async () => {
     await navigator.clipboard.writeText(value.toUpperCase())
     setCopied(true)
+    toast.success("Copiado al portapapeles")
     setTimeout(() => setCopied(false), 2000)
   }, [value])
 

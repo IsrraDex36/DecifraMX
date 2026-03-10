@@ -27,13 +27,14 @@ const WINDOW_MS = 60 * 60 * 1000; // 1 hour
  * @param ip The IP address of the client
  * @returns Object indicating if limit is exceeded and the remaining time to reset in seconds
  */
-export function checkRateLimit(ip: string): { success: boolean; headers: HeadersInit } {
+export function checkRateLimit(ip: string, scope = 'global'): { success: boolean; headers: HeadersInit } {
   const now = Date.now();
-  let info = rateLimitMap.get(ip);
+  const key = `${scope}:${ip}`;
+  let info = rateLimitMap.get(key);
 
   if (!info) {
     info = { count: 1, resetTime: now + WINDOW_MS };
-    rateLimitMap.set(ip, info);
+    rateLimitMap.set(key, info);
   } else {
     // Check if the window has passed
     if (now > info.resetTime) {
@@ -67,9 +68,9 @@ export function checkRateLimit(ip: string): { success: boolean; headers: Headers
  */
 export function cleanupRateLimitMap() {
   const now = Date.now();
-  for (const [ip, info] of rateLimitMap.entries()) {
+  for (const [key, info] of rateLimitMap.entries()) {
     if (now > info.resetTime) {
-      rateLimitMap.delete(ip);
+      rateLimitMap.delete(key);
     }
   }
 }

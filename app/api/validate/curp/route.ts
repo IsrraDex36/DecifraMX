@@ -1,19 +1,22 @@
 import { NextRequest } from 'next/server';
 import { checkRateLimit, cleanupRateLimitMap, getClientIp } from '@/lib/api/rate-limit';
 import { apiResponse, apiErrorResponse, sanitizeInput } from '@/lib/api/response';
+import { startApiTrace } from '@/lib/api/observability';
 import { decodeCURP, calcularDigitoVerificador } from '@/lib/curp-rfc-decoder';
 
 export async function POST(request: NextRequest) {
+  const trace = startApiTrace(request, '/api/validate/curp');
   if (Math.random() < 0.1) cleanupRateLimitMap();
   const ip = getClientIp(request);
-  const rateLimit = checkRateLimit(ip);
+  const rateLimit = checkRateLimit(ip, 'validate-curp-post');
 
   if (!rateLimit.success) {
     return apiErrorResponse(
       [{ code: 'RATE_LIMIT_EXCEEDED', message: 'Se han excedido las 100 peticiones por hora.' }],
       429,
       undefined,
-      rateLimit.headers
+      rateLimit.headers,
+      trace
     );
   }
 
@@ -24,7 +27,8 @@ export async function POST(request: NextRequest) {
       [{ code: 'INVALID_FORMAT', message: 'Content-Type debe ser application/json.' }],
       415,
       undefined,
-      rateLimit.headers
+      rateLimit.headers,
+      trace
     );
   }
 
@@ -36,7 +40,8 @@ export async function POST(request: NextRequest) {
       [{ code: 'INVALID_FORMAT', message: 'Payload JSON inválido o malformado.' }],
       400,
       undefined,
-      rateLimit.headers
+      rateLimit.headers,
+      trace
     );
   }
 
@@ -45,7 +50,8 @@ export async function POST(request: NextRequest) {
       [{ code: 'INVALID_FORMAT', message: 'El body debe ser un objeto JSON.' }],
       400,
       undefined,
-      rateLimit.headers
+      rateLimit.headers,
+      trace
     );
   }
 
@@ -56,7 +62,18 @@ export async function POST(request: NextRequest) {
       [{ code: 'MISSING_FIELD', message: 'El campo "curp" es requerido en el body.', field: 'curp' }],
       400,
       undefined,
-      rateLimit.headers
+      rateLimit.headers,
+      trace
+    );
+  }
+
+  if (!/^[A-Z0-9]+$/.test(curp)) {
+    return apiErrorResponse(
+      [{ code: 'INVALID_FORMAT', message: 'El CURP solo puede contener letras y números.', field: 'curp' }],
+      400,
+      curp,
+      rateLimit.headers,
+      trace
     );
   }
 
@@ -65,7 +82,8 @@ export async function POST(request: NextRequest) {
       [{ code: 'INVALID_LENGTH', message: 'El CURP debe tener exactamente 18 caracteres.', field: 'curp' }],
       400,
       curp,
-      rateLimit.headers
+      rateLimit.headers,
+      trace
     );
   }
 
@@ -81,7 +99,7 @@ export async function POST(request: NextRequest) {
       return { code, message: err, field: 'curp' };
     });
 
-    return apiErrorResponse(apiErrors, 400, curp, rateLimit.headers);
+    return apiErrorResponse(apiErrors, 400, curp, rateLimit.headers, trace);
   }
 
   const lastChar = curp.charAt(17);
@@ -117,16 +135,18 @@ export async function POST(request: NextRequest) {
     errors: []
   };
 
-  return apiResponse(validResponse, 200, rateLimit.headers);
+  return apiResponse(validResponse, 200, rateLimit.headers, trace);
 }
 
 export async function OPTIONS() {
+  const allowedOrigin = process.env.API_ALLOWED_ORIGIN || '*';
   return new Response(null, {
     status: 204,
     headers: {
-      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Origin': allowedOrigin,
       'Access-Control-Allow-Methods': 'POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type',
+      'Vary': 'Origin',
     },
   });
 }

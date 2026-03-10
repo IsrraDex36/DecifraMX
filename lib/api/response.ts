@@ -1,13 +1,20 @@
 import { NextResponse } from 'next/server';
+import { type ApiTrace, logApiTrace } from '@/lib/api/observability';
 
 const API_VERSION = '1.0';
+const ALLOWED_ORIGIN = process.env.API_ALLOWED_ORIGIN || '*';
 
 const STANDARD_HEADERS = {
   'Content-Type': 'application/json',
   'X-API-Version': API_VERSION,
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type',
+  'Vary': 'Origin',
+  'X-Content-Type-Options': 'nosniff',
+  'X-Frame-Options': 'DENY',
+  'Referrer-Policy': 'no-referrer',
+  'Content-Security-Policy': "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
 };
 
 /**
@@ -17,11 +24,34 @@ const STANDARD_HEADERS = {
  * @param extraHeaders Additional headers (like Rate Limit headers)
  * @returns NextResponse
  */
-export function apiResponse(body: any, status = 200, extraHeaders: HeadersInit = {}) {
+export function apiResponse(
+  body: any,
+  status = 200,
+  extraHeaders: HeadersInit = {},
+  trace?: ApiTrace
+) {
+  const traceHeaders = trace
+    ? {
+        'X-Request-Id': trace.requestId,
+        'X-Response-Time-Ms': `${Date.now() - trace.startedAt}`,
+      }
+    : {};
+
+  if (trace) {
+    const isValid = Boolean(
+      typeof body === 'object' &&
+      body !== null &&
+      'valid' in body &&
+      (body as { valid?: unknown }).valid === true
+    );
+    logApiTrace(trace, status, isValid);
+  }
+
   return NextResponse.json(body, {
     status,
     headers: {
       ...STANDARD_HEADERS,
+      ...traceHeaders,
       ...extraHeaders,
     },
   });
@@ -39,7 +69,8 @@ export function apiErrorResponse(
   errors: Array<{ code: string; message: string; field?: string }>,
   status = 400,
   curpOrRfc?: string,
-  extraHeaders: HeadersInit = {}
+  extraHeaders: HeadersInit = {},
+  trace?: ApiTrace
 ) {
   const body: any = { valid: false, errors };
   
@@ -52,7 +83,7 @@ export function apiErrorResponse(
     }
   }
 
-  return apiResponse(body, status, extraHeaders);
+  return apiResponse(body, status, extraHeaders, trace);
 }
 
 /**

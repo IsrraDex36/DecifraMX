@@ -1,24 +1,82 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect, useRef } from "react"
 import { X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { decodeCURP, decodeRFC } from "@/lib/curp-rfc-decoder"
 import { DecoderDisplay } from "@/components/decoder-display"
 import { SummaryCard } from "@/components/summary-card"
+import { toast } from "sonner"
 
 type DocumentType = "curp" | "rfc"
+type RecentEntry = { type: DocumentType; value: string }
+const RECENT_STORAGE_KEY = "deciframx.recent.v1"
 
 export function DecoderInput() {
   const [docType, setDocType] = useState<DocumentType>("curp")
   const [value, setValue] = useState("")
   const [isFocused, setIsFocused] = useState(false)
+  const [recentItems, setRecentItems] = useState<RecentEntry[]>([])
+  const lastPersistedRef = useRef<string>("")
 
   const decoded = docType === "curp" ? decodeCURP(value) : decodeRFC(value)
 
   const handleClear = useCallback(() => {
     setValue("")
+  }, [])
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(RECENT_STORAGE_KEY)
+      if (!raw) return
+      const parsed = JSON.parse(raw) as RecentEntry[]
+      if (!Array.isArray(parsed)) return
+      const safe = parsed.filter(
+        (item): item is RecentEntry =>
+          typeof item?.value === "string" && (item?.type === "curp" || item?.type === "rfc")
+      )
+      setRecentItems(safe.slice(0, 6))
+    } catch {
+      // Silently ignore corrupted localStorage values.
+    }
+  }, [])
+
+  useEffect(() => {
+    const completedLength = docType === "curp" ? 18 : value.length >= 12 ? value.length : 13
+    const isComplete = value.length === completedLength
+    if (!decoded.isValid || !isComplete) return
+
+    const entry: RecentEntry = { type: docType, value: value.toUpperCase() }
+    const entryKey = `${entry.type}:${entry.value}`
+    if (entryKey === lastPersistedRef.current) return
+    lastPersistedRef.current = entryKey
+
+    setRecentItems((prev) => {
+      const next = [entry, ...prev.filter((item) => !(item.type === entry.type && item.value === entry.value))]
+        .slice(0, 6)
+      try {
+        localStorage.setItem(RECENT_STORAGE_KEY, JSON.stringify(next))
+      } catch {
+        // Ignore storage quota and privacy mode failures.
+      }
+      return next
+    })
+  }, [decoded.isValid, docType, value])
+
+  const handleUseRecent = useCallback((entry: RecentEntry) => {
+    setDocType(entry.type)
+    setValue(entry.value)
+  }, [])
+
+  const clearRecent = useCallback(() => {
+    setRecentItems([])
+    try {
+      localStorage.removeItem(RECENT_STORAGE_KEY)
+    } catch {
+      // noop
+    }
+    toast.success("Historial limpiado")
   }, [])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -76,6 +134,34 @@ export function DecoderInput() {
           </button>
         </div>
       </div>
+
+      {recentItems.length > 0 ? (
+        <div className="max-w-2xl mx-auto rounded-md border border-border bg-card px-3 py-3 sm:px-4">
+          <div className="flex items-center justify-between gap-3 mb-2">
+            <p className="text-xs uppercase tracking-widest text-muted-foreground">Recientes</p>
+            <button
+              type="button"
+              onClick={clearRecent}
+              className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-4"
+            >
+              Limpiar
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {recentItems.map((entry) => (
+              <button
+                type="button"
+                key={`${entry.type}-${entry.value}`}
+                onClick={() => handleUseRecent(entry)}
+                className="inline-flex items-center gap-1 rounded-sm border border-border bg-muted/40 px-2.5 py-1.5 text-xs text-foreground hover:bg-muted transition-colors"
+              >
+                <span className="font-semibold text-muted-foreground">{entry.type.toUpperCase()}</span>
+                <span className="font-mono">{entry.value}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : null}
 
       {/* Input Field */}
       <div className="relative max-w-2xl mx-auto group mt-8 sm:mt-12">

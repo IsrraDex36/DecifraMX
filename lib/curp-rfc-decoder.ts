@@ -147,7 +147,8 @@ function parseDate(yy: string, mm: string, dd: string): { formatted: string; val
 function getSexDescription(char: string): { description: string; valid: boolean } {
   if (char === "H") return { description: "Hombre", valid: true }
   if (char === "M") return { description: "Mujer", valid: true }
-  return { description: "Sexo no reconocido", valid: false }
+  if (char === "X") return { description: "No binario", valid: true }
+  return { description: "No reconocido (usa H, M o X)", valid: false }
 }
 
 function getEstadoDescription(code: string): { description: string; valid: boolean } {
@@ -171,7 +172,7 @@ export function decodeCURP(curp: string): DecodedCURP {
   
   const len = upperCurp.length
   
-  // First 4 characters: Name initials
+  // Letras 1 a 4: tus iniciales (apellidos y nombre)
   if (len >= 1) {
     const apellido1Char = upperCurp.slice(0, Math.min(1, len))
     segments.push({
@@ -180,7 +181,7 @@ export function decodeCURP(curp: string): DecodedCURP {
       endIndex: 0,
       type: "apellido1",
       label: "Primer apellido",
-      description: `Primera vocal del primer apellido`,
+      description: "La primera letra de tu primer apellido. Ej.: si te apellidas García, aquí va la G.",
       icon: "user",
       color: "var(--segment-name)"
     })
@@ -193,8 +194,8 @@ export function decodeCURP(curp: string): DecodedCURP {
       startIndex: 1,
       endIndex: 1,
       type: "apellido1",
-      label: "Vocal interna",
-      description: `Primera vocal interna del primer apellido`,
+      label: "Vocal del primer apellido",
+      description: "La primera vocal que tenga tu primer apellido. En GARCÍA es la A.",
       icon: "user",
       color: "var(--segment-name)"
     })
@@ -208,7 +209,7 @@ export function decodeCURP(curp: string): DecodedCURP {
       endIndex: 2,
       type: "apellido2",
       label: "Segundo apellido",
-      description: `Primera letra del segundo apellido`,
+      description: "La primera letra de tu segundo apellido.",
       icon: "users",
       color: "var(--segment-name)"
     })
@@ -222,7 +223,7 @@ export function decodeCURP(curp: string): DecodedCURP {
       endIndex: 3,
       type: "nombre",
       label: "Nombre",
-      description: `Primera letra del nombre de pila`,
+      description: "La primera letra de tu nombre. Si te llamas María o José, a veces usan la del segundo nombre.",
       icon: "sparkles",
       color: "var(--segment-name)"
     })
@@ -251,7 +252,7 @@ export function decodeCURP(curp: string): DecodedCURP {
       endIndex: Math.min(9, len - 1),
       type: "fecha",
       label: "Fecha de nacimiento",
-      description: dateResult.formatted,
+      description: `${dateResult.formatted}. Son 6 números: año (2), mes (2) y día (2).`,
       icon: "calendar",
       color: "var(--segment-date)"
     })
@@ -273,16 +274,16 @@ export function decodeCURP(curp: string): DecodedCURP {
       type: "sexo",
       label: "Sexo",
       description: sexResult.description,
-      icon: sexChar === "H" || sexChar === "M" ? "user" : "help-circle",
+      icon: (sexChar === "H" || sexChar === "M" || sexChar === "X") ? "user" : "help-circle",
       color: "var(--segment-sex)"
     })
     
     if (!sexResult.valid) {
-      errors.push("El indicador de sexo no es válido (debe ser H o M)")
+      errors.push("El indicador de sexo no es válido (debe ser H, M o X)")
     }
   }
   
-  // State: positions 11-12
+  // Posiciones 12-13: Código de la entidad federativa de nacimiento (RENAPO). NE = nacido en el extranjero.
   if (len >= 12) {
     const stateChars = upperCurp.slice(11, Math.min(13, len))
     const stateResult = getEstadoDescription(stateChars)
@@ -292,8 +293,8 @@ export function decodeCURP(curp: string): DecodedCURP {
       startIndex: 11,
       endIndex: Math.min(12, len - 1),
       type: "estado",
-      label: "Entidad federativa",
-      description: stateResult.description,
+      label: "Dónde naciste",
+      description: `${stateResult.description}. Dos letras que identifican el estado o país (NE = extranjero).`,
       icon: "map-pin",
       color: "var(--segment-state)"
     })
@@ -303,7 +304,7 @@ export function decodeCURP(curp: string): DecodedCURP {
     }
   }
   
-  // Internal consonants: positions 13-15
+  // Posiciones 14-16: Primera consonante interna del 1er apellido, del 2do apellido y del nombre (para diferenciar personas con mismas iniciales y fecha).
   if (len >= 14) {
     const consonants = upperCurp.slice(13, Math.min(16, len))
     
@@ -312,14 +313,13 @@ export function decodeCURP(curp: string): DecodedCURP {
       startIndex: 13,
       endIndex: Math.min(15, len - 1),
       type: "consonantes",
-      label: "Consonantes internas",
-      description: "Primeras consonantes internas de los apellidos y nombre",
+      label: "Tres consonantes",
+      description: "La primera consonante interna de tu primer apellido, de tu segundo apellido y de tu nombre. Sirven para que no haya dos CURP iguales cuando dos personas tienen las mismas iniciales y fecha.",
       icon: "type",
       color: "var(--segment-consonants)"
     })
   }
   
-  // Homoclave: position 16
   if (len >= 17) {
     const homoclave = upperCurp[16]
     
@@ -328,14 +328,13 @@ export function decodeCURP(curp: string): DecodedCURP {
       startIndex: 16,
       endIndex: 16,
       type: "homoclave",
-      label: "Homoclave",
-      description: "Dígito diferenciador para evitar duplicados",
+      label: "Diferenciador",
+      description: "Una letra o número que asigna el gobierno para que tu CURP sea única. Nadie más puede tener la misma combinación.",
       icon: "hash",
       color: "var(--segment-homoclave)"
     })
   }
   
-  // Check digit: position 17
   if (len >= 18) {
     const checkDigit = upperCurp[17]
     
@@ -344,8 +343,8 @@ export function decodeCURP(curp: string): DecodedCURP {
       startIndex: 17,
       endIndex: 17,
       type: "verificador",
-      label: "Dígito verificador",
-      description: "Código de verificación para validar el CURP",
+      label: "Número de control",
+      description: "Un número del 0 al 9 que se calcula con las 17 letras anteriores. Si alguien se equivoca al escribir tu CURP, este número no cuadra y se detecta el error.",
       icon: "check-circle",
       color: "var(--segment-check)"
     })
@@ -420,14 +419,14 @@ export function decodeRFC(rfc: string): DecodedRFC {
     const nameChars = upperRfc.slice(0, Math.min(nameLength, len))
     
     if (!isMoral && len >= 4) {
-      // Persona física - 4 characters
+      // Persona física: mismas 4 letras que el CURP (apellidos y nombre)
       segments.push({
         chars: nameChars.slice(0, 1),
         startIndex: 0,
         endIndex: 0,
         type: "apellido1",
         label: "Primer apellido",
-        description: "Primera letra y vocal del primer apellido",
+        description: "La primera letra de tu primer apellido. Igual que en el CURP.",
         icon: "user",
         color: "var(--segment-name)"
       })
@@ -438,8 +437,8 @@ export function decodeRFC(rfc: string): DecodedRFC {
           startIndex: 1,
           endIndex: 1,
           type: "apellido1",
-          label: "Vocal interna",
-          description: "Primera vocal interna del primer apellido",
+          label: "Vocal del primer apellido",
+          description: "La primera vocal de tu primer apellido. En GARCÍA es la A.",
           icon: "user",
           color: "var(--segment-name)"
         })
@@ -452,7 +451,7 @@ export function decodeRFC(rfc: string): DecodedRFC {
           endIndex: 2,
           type: "apellido2",
           label: "Segundo apellido",
-          description: "Primera letra del segundo apellido",
+          description: "La primera letra de tu segundo apellido.",
           icon: "users",
           color: "var(--segment-name)"
         })
@@ -465,20 +464,19 @@ export function decodeRFC(rfc: string): DecodedRFC {
           endIndex: 3,
           type: "nombre",
           label: "Nombre",
-          description: "Primera letra del nombre de pila",
+          description: "La primera letra de tu nombre.",
           icon: "sparkles",
           color: "var(--segment-name)"
         })
       }
     } else {
-      // Persona moral - 3 characters
       segments.push({
         chars: nameChars,
         startIndex: 0,
         endIndex: Math.min(nameLength - 1, len - 1),
         type: "nombre",
-        label: "Razón social",
-        description: "Primeras 3 letras de la razón social de la empresa",
+        label: "Nombre de la empresa",
+        description: "Las primeras 3 letras del nombre de la empresa o negocio (como está en el SAT).",
         icon: "building",
         color: "var(--segment-name)"
       })
@@ -507,14 +505,13 @@ export function decodeRFC(rfc: string): DecodedRFC {
       startIndex: dateStart,
       endIndex: Math.min(dateStart + 5, len - 1),
       type: "fecha",
-      label: isMoral ? "Fecha de constitución" : "Fecha de nacimiento",
-      description: dateResult.formatted,
+      label: isMoral ? "Fecha de la empresa" : "Fecha de nacimiento",
+      description: isMoral ? `${dateResult.formatted}. El día en que se creó o registró la empresa.` : `${dateResult.formatted}. Año, mes y día en 6 números.`,
       icon: "calendar",
       color: "var(--segment-date)"
     })
   }
   
-  // Homoclave: last 3 characters
   const homoStart = dateStart + 6
   if (len > homoStart) {
     const homoclave = upperRfc.slice(homoStart, Math.min(homoStart + 3, len))
@@ -525,7 +522,7 @@ export function decodeRFC(rfc: string): DecodedRFC {
       endIndex: Math.min(homoStart + 2, len - 1),
       type: "homoclave",
       label: "Homoclave",
-      description: "Código asignado por el SAT para evitar duplicados y verificar autenticidad",
+      description: "Tres letras o números que asigna el SAT. Nadie puede elegirlos: salen de un cálculo. Sirven para que no existan dos RFC iguales.",
       icon: "hash",
       color: "var(--segment-homoclave)"
     })

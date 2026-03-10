@@ -3,7 +3,12 @@
 import { useRef, useCallback } from "react"
 import { Lock, FileText, ServerOff, EyeOff, X } from "lucide-react"
 
-export function PrivacyModal() {
+interface PrivacyModalProps {
+  label?: string
+  className?: string
+}
+
+export function PrivacyModal({ label = "Aviso de Privacidad", className }: PrivacyModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null)
 
   const open = useCallback(() => {
@@ -19,9 +24,11 @@ export function PrivacyModal() {
       <button
         type="button"
         onClick={open}
-        className="hover:text-foreground transition-colors underline underline-offset-4 text-left"
+        className={
+          className ?? "hover:text-foreground transition-colors underline underline-offset-4 text-left"
+        }
       >
-        Aviso de Privacidad
+        {label}
       </button>
 
       <dialog
@@ -73,14 +80,24 @@ export function PrivacyModal() {
                   <h3 className="text-base sm:text-lg font-medium wrap-break-word">2. Procesamiento local (Client-side)</h3>
                 </div>
                 <p className="text-sm sm:text-base text-muted-foreground leading-relaxed pl-6 sm:pl-8 min-w-0 wrap-break-word">
-                  Cuando escribes un carácter en la caja de texto central, el código que descifra la estructura de las claves gubernamentales se ejecuta directamente en el navegador de tu computadora o celular. Ni un solo bit de esa información viaja a internet o a servidores externos.
+                  Cuando escribes un carácter en la caja de texto central, el código que descifra la estructura de las claves gubernamentales se ejecuta directamente en el navegador de tu computadora o celular. Ni un solo bit de esa información viaja a internet o a servidores externos en esa experiencia web.
                 </p>
               </div>
 
               <div className="space-y-2 sm:space-y-3 min-w-0">
                 <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                   <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground shrink-0" aria-hidden />
-                  <h3 className="text-base sm:text-lg font-medium wrap-break-word">3. Sin afiliación gubernamental</h3>
+                  <h3 className="text-base sm:text-lg font-medium wrap-break-word">3. API publica y tratamiento temporal</h3>
+                </div>
+                <p className="text-sm sm:text-base text-muted-foreground leading-relaxed pl-6 sm:pl-8 min-w-0 wrap-break-word">
+                  Si usas los endpoints de API, el procesamiento ocurre en servidor para responder la solicitud HTTP. No se persisten CURP/RFC en bases de datos ni se realizan consultas a RENAPO/SAT; la API solo valida estructura y devuelve resultado.
+                </p>
+              </div>
+
+              <div className="space-y-2 sm:space-y-3 min-w-0">
+                <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                  <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground shrink-0" aria-hidden />
+                  <h3 className="text-base sm:text-lg font-medium wrap-break-word">4. Sin afiliación gubernamental</h3>
                 </div>
                 <p className="text-sm sm:text-base text-muted-foreground leading-relaxed pl-6 sm:pl-8 min-w-0 wrap-break-word">
                   Este proyecto es independiente, educativo y de código abierto. No existe conexión ni comunicación alguna con herramientas de SEGOB, RENAPO o el SAT. Nuestro propósito es únicamente didáctico: que comprendas cómo está ensamblada tu identidad digital en México.

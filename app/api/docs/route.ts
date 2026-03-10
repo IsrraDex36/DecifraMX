@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
+import { startApiTrace, logApiTrace } from '@/lib/api/observability';
+import type { NextRequest } from 'next/server';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const trace = startApiTrace(request, '/api/docs');
   const openApiDocs = {
     openapi: "3.0.0",
     info: {
@@ -110,11 +113,16 @@ export async function GET() {
     }
   };
 
+  logApiTrace(trace, 200, true);
   return NextResponse.json(openApiDocs, {
     status: 200,
     headers: {
       'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*'
+      'Access-Control-Allow-Origin': process.env.API_ALLOWED_ORIGIN || '*',
+      'X-Request-Id': trace.requestId,
+      'X-Response-Time-Ms': `${Date.now() - trace.startedAt}`,
+      'X-Content-Type-Options': 'nosniff',
+      'Vary': 'Origin',
     }
   });
 }

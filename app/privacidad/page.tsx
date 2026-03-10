@@ -56,14 +56,24 @@ export default function Privacidad() {
               <h2 className="text-xl font-medium">2. Procesamiento local (Client-side)</h2>
             </div>
             <p className="text-muted-foreground leading-relaxed pl-8">
-              Cuando escribes un carácter en la caja de texto central, el código que descifra la estructura de las claves gubernamentales se ejecuta directamente en el navegador de tu computadora o celular. Ni un solo bit de esa información viaja a internet o a servidores externos.
+              Cuando escribes un carácter en la caja de texto central, el código que descifra la estructura de las claves gubernamentales se ejecuta directamente en el navegador de tu computadora o celular. Ni un solo bit de esa información viaja a internet o a servidores externos en esa experiencia web.
             </p>
           </div>
 
           <div className="space-y-4">
             <div className="flex items-center gap-3">
               <FileText className="w-5 h-5 text-muted-foreground" />
-              <h2 className="text-xl font-medium">3. Sin afiliación gubernamental</h2>
+              <h2 className="text-xl font-medium">3. API pública y tratamiento temporal</h2>
+            </div>
+            <p className="text-muted-foreground leading-relaxed pl-8">
+              Si usas los endpoints de API, el procesamiento ocurre en servidor para responder la solicitud HTTP. No persistimos CURP/RFC en bases de datos ni consultamos RENAPO/SAT; la API solo valida estructura y devuelve el resultado.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <FileText className="w-5 h-5 text-muted-foreground" />
+              <h2 className="text-xl font-medium">4. Sin afiliación gubernamental</h2>
             </div>
             <p className="text-muted-foreground leading-relaxed pl-8">
               Este proyecto es independiente, educativo y de código abierto. No existe conexión ni comunicación alguna con herramientas de SEGOB, RENAPO o el SAT. Nuestro propósito es únicamente didáctico: que comprendas cómo está ensamblada tu identidad digital en México.
